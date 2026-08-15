@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/infrastructure/prisma/prisma.service';
+import { Injectable } from "@nestjs/common";
+import { PrismaService } from "@/infrastructure/prisma/prisma.service";
 
 @Injectable()
 export class SessionsService {
@@ -9,7 +9,7 @@ export class SessionsService {
     return this.prisma.session.create({
       data: {
         userId,
-        refreshTokenHash: '',
+        refreshTokenHash: "",
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       },
     });
