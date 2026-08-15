@@ -2,15 +2,20 @@ import {
   Injectable,
   ConflictException,
   UnauthorizedException,
-} from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+} from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
 
-import { UsersService } from '@module/users/users.service';
-import { SessionsService } from '@module/sessions/sessions.service';
+import { UsersService } from "@module/users/users.service";
+import { SessionsService } from "@module/sessions/sessions.service";
 
-import { RegisterDto, LoginDto } from './dto/index';
+import { RegisterDto, LoginDto } from "./dto/index";
 
-import { hashValue, compareHash } from '@/utils/passport.utils';
+import { hashValue, compareHash } from "@/utils/passport.utils";
+
+type RefreshTokenPayload = {
+  sub: string;
+  sessionId: string;
+};
 
 @Injectable()
 export class AuthService {
@@ -27,7 +32,7 @@ export class AuthService {
       },
       {
         secret: process.env.JWT_ACCESS_SECRET,
-        expiresIn: '15m',
+        expiresIn: "15m",
       },
     );
 
@@ -38,7 +43,7 @@ export class AuthService {
       },
       {
         secret: process.env.JWT_REFRESH_SECRET,
-        expiresIn: '7d',
+        expiresIn: "7d",
       },
     );
 
@@ -53,7 +58,7 @@ export class AuthService {
     const user = await this.usersService.findUserByEmail(email);
 
     if (user)
-      throw new ConflictException('User with this email already exists');
+      throw new ConflictException("User with this email already exists");
 
     const hashedPassword = await hashValue(password);
     const createdUser = await this.usersService.createUser({
@@ -85,11 +90,11 @@ export class AuthService {
   async login(dto: LoginDto) {
     const { email, password } = dto;
     const user = await this.usersService.findUserByEmail(email);
-    if (!user) throw new UnauthorizedException('Invalid email or password');
+    if (!user) throw new UnauthorizedException("Invalid email or password");
 
     const isValidPassword = await compareHash(password, user.password);
     if (!isValidPassword)
-      throw new UnauthorizedException('Invalid email or password');
+      throw new UnauthorizedException("Invalid email or password");
 
     const { password: _password, ...userWithoutPassword } = user;
     const session = await this.sessionService.createSession(user.id);
@@ -111,13 +116,16 @@ export class AuthService {
   }
 
   async logout(refreshToken: string) {
-    const payload = await this.jwtService.verifyAsync(refreshToken, {
-      secret: process.env.JWT_REFRESH_SECRET,
-    });
+    const payload = await this.jwtService.verifyAsync<RefreshTokenPayload>(
+      refreshToken,
+      {
+        secret: process.env.JWT_REFRESH_SECRET,
+      },
+    );
     await this.sessionService.logoutSession(payload.sessionId);
 
     return {
-      message: 'Logged out successfully',
+      message: "Logged out successfully",
     };
   }
 
@@ -138,15 +146,18 @@ export class AuthService {
   }
 
   async refreshTokens(refreshToken: string) {
-    const payload = await this.jwtService.verifyAsync(refreshToken, {
-      secret: process.env.JWT_REFRESH_SECRET,
-    });
+    const payload = await this.jwtService.verifyAsync<RefreshTokenPayload>(
+      refreshToken,
+      {
+        secret: process.env.JWT_REFRESH_SECRET,
+      },
+    );
 
     const session = await this.sessionService.findSessionById(
       payload.sessionId,
     );
     if (!session) {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException("Invalid refresh token");
     }
     const isValidRefreshToken = await compareHash(
       refreshToken,
@@ -154,7 +165,7 @@ export class AuthService {
     );
 
     if (!isValidRefreshToken) {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException("Invalid refresh token");
     }
 
     const { accessToken, refreshToken: newRefreshToken } =

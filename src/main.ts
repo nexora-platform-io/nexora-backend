@@ -17,7 +17,11 @@ async function bootstrap() {
     .setTitle("Codeflow API")
     .setDescription("Authentication and workspace API for Codeflow.")
     .setVersion("1.0.0")
-    .setContact("Codeflow", "https://github.com/codeflow-io", "support@codeflow.io")
+    .setContact(
+      "Codeflow",
+      "https://github.com/codeflow-io",
+      "support@codeflow.io",
+    )
     .addBearerAuth(
       {
         type: "http",
@@ -43,4 +47,5 @@ async function bootstrap() {
 
   await app.listen(process.env.PORT ?? 3000);
 }
-bootstrap();
+
+bootstrap().catch(console.error);
