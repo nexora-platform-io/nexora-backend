@@ -1,12 +1,37 @@
-import { ApiOperation, ApiCreatedResponse, ApiBadRequestResponse, ApiConflictResponse, ApiTags, ApiUnauthorizedResponse, ApiOkResponse, ApiBearerAuth, ApiCookieAuth } from "@nestjs/swagger";
-import { Controller, Body, Post, Get, UseGuards, Req, Res } from "@nestjs/common";
+import {
+  ApiOperation,
+  ApiCreatedResponse,
+  ApiBadRequestResponse,
+  ApiConflictResponse,
+  ApiTags,
+  ApiUnauthorizedResponse,
+  ApiOkResponse,
+  ApiBearerAuth,
+  ApiCookieAuth,
+} from "@nestjs/swagger";
+import {
+  Controller,
+  Body,
+  Post,
+  Get,
+  UseGuards,
+  Req,
+  Res,
+} from "@nestjs/common";
 import type { Request, Response } from "express";
 
 import { JwtAuthGuard } from "./strategies/jwt-auth.guard";
 import type { AuthenticatedRequest } from "./types/auth.types";
 
 import { AuthService } from "./auth.service";
-import { RegisterDto, LoginDto, AuthSessionEnvelope, AccessTokenEnvelope, AuthUserEnvelopeResponse, MessageResponse } from "./dto/index";
+import {
+  RegisterDto,
+  LoginDto,
+  AuthSessionEnvelope,
+  AccessTokenEnvelope,
+  AuthUserEnvelopeResponse,
+  MessageResponse,
+} from "./dto/index";
 
 @Controller("auth")
 @ApiTags("Authentication")
@@ -19,7 +44,8 @@ export class AuthController {
     type: AuthSessionEnvelope,
     headers: {
       "Set-Cookie": {
-        description: "HttpOnly refreshToken cookie for the authenticated session.",
+        description:
+          "HttpOnly refreshToken cookie for the authenticated session.",
         schema: { type: "string" },
       },
     },
@@ -34,13 +60,16 @@ export class AuthController {
     summary: "Register a user",
     description: "Creates a user account and starts an authenticated session.",
   })
-  async register(@Body() dto: RegisterDto, @Res({ passthrough: true }) res: Response) {
+  async register(
+    @Body() dto: RegisterDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const { data } = await this.authService.register(dto);
 
     res.cookie("refreshToken", data.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "none",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       path: "/api/auth",
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });
@@ -63,20 +92,24 @@ export class AuthController {
     type: AuthSessionEnvelope,
     headers: {
       "Set-Cookie": {
-        description: "HttpOnly refreshToken cookie for the authenticated session.",
+        description:
+          "HttpOnly refreshToken cookie for the authenticated session.",
         schema: { type: "string" },
       },
     },
   })
   @ApiBadRequestResponse({ description: "Invalid request data" })
   @ApiUnauthorizedResponse({ description: "Invalid email or password" })
-  async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
+  async login(
+    @Body() dto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const { data } = await this.authService.login(dto);
 
     res.cookie("refreshToken", data.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "none",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       path: "/api/auth",
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });
@@ -107,14 +140,12 @@ export class AuthController {
   })
   @ApiUnauthorizedResponse({ description: "Invalid or expired refresh token" })
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    console.log(req.cookies);
-    console.log(req.cookies.refreshToken);
-    const refreshToken = req.cookies.refreshToken;
+    const refreshToken = req.cookies.refreshToken as string;
     const result = this.authService.logout(refreshToken);
     res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "none",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       path: "/api/auth",
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });
@@ -150,14 +181,17 @@ export class AuthController {
   })
   @ApiBadRequestResponse({ description: "Invalid request data" })
   @ApiUnauthorizedResponse({ description: "Invalid or expired refresh token" })
-  async refreshTokens(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    const refreshToken = req.cookies.refreshToken;
+  async refreshTokens(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const refreshToken = req.cookies.refreshToken as string;
     const { data } = await this.authService.refreshTokens(refreshToken);
 
     res.cookie("refreshToken", data.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "none",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       path: "/api/auth",
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });
