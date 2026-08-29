@@ -14,14 +14,10 @@ async function bootstrap() {
   });
 
   const swaggerConfig = new DocumentBuilder()
-    .setTitle("Codeflow API")
-    .setDescription("Authentication and workspace API for Codeflow.")
+    .setTitle("Nexora API")
+    .setDescription("Authentication and workspace API for Nexora.")
     .setVersion("1.0.0")
-    .setContact(
-      "Codeflow",
-      "https://github.com/codeflow-io",
-      "support@codeflow.io",
-    )
+    .setContact("Nexora", "https://github.com/nexora-io", "support@nexora.io")
     .addBearerAuth(
       {
         type: "http",
